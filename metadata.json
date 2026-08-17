@@ -1,0 +1,6 @@
+{
+  "name": "FikFap Account Tracker",
+  "description": "Multi-account tracking and analytics dashboard for FikFap creator accounts with automated sync, stats aggregation, and link click monitoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
