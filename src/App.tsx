@@ -66,17 +66,24 @@ export default function App() {
     if (!user) return;
 
     setLoading(true);
-    const unsubscribe = firebaseService.subscribeAccounts(user.id, (fetchedAccounts) => {
-      setAccounts(fetchedAccounts);
-      setStats(firebaseService.calculateStats(fetchedAccounts));
-      setLoading(false);
+    const unsubscribe = firebaseService.subscribeAccounts(
+      user.id,
+      (fetchedAccounts) => {
+        setAccounts(fetchedAccounts);
+        setStats(firebaseService.calculateStats(fetchedAccounts));
+        setLoading(false);
 
-      // Keep selected account in sync if open in modal
-      if (selectedAccount) {
-        const found = fetchedAccounts.find(a => a.id === selectedAccount.id);
-        if (found) setSelectedAccount(found);
+        // Keep selected account in sync if open in modal
+        if (selectedAccount) {
+          const found = fetchedAccounts.find(a => a.id === selectedAccount.id);
+          if (found) setSelectedAccount(found);
+        }
+      },
+      (err) => {
+        console.warn('Firestore subscription fallback:', err);
+        setLoading(false);
       }
-    });
+    );
 
     return () => unsubscribe();
   }, [user?.id]);

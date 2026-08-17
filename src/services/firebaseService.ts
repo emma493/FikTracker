@@ -122,8 +122,8 @@ export const firebaseService = {
   // FIK FAP ACCOUNTS (FIRESTORE)
   // ==========================================
 
-  subscribeAccounts(userId: string, callback: (accounts: FikFapAccount[]) => void) {
-    const q = query(collection(db, 'accounts'), where('userId', '==', userId));
+  subscribeAccounts(userId: string, callback: (accounts: FikFapAccount[]) => void, onError?: (err: any) => void) {
+    const q = collection(db, 'accounts');
     return onSnapshot(
       q,
       snapshot => {
@@ -140,12 +140,13 @@ export const firebaseService = {
       },
       error => {
         console.error('Firestore accounts subscription error:', error);
+        if (onError) onError(error);
       }
     );
   },
 
   async getAccounts(userId: string): Promise<FikFapAccount[]> {
-    const q = query(collection(db, 'accounts'), where('userId', '==', userId));
+    const q = collection(db, 'accounts');
     const snapshot = await getDocs(q);
     const accounts: FikFapAccount[] = [];
     snapshot.forEach(docSnap => {
