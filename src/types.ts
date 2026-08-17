@@ -110,3 +110,26 @@ export interface AppSettings {
   defaultProxy?: string;
   autoSyncEnabled: boolean;
 }
+
+export interface TelemetryPingEvent {
+  id: string;
+  timestamp: string;
+  latencyMs: number;
+  accountId?: string;
+  accountUsername?: string;
+  type: 'ping' | 'traffic_pulse' | 'metric_update' | 'sync';
+  message: string;
+  deltaClicks?: number;
+  deltaViews?: number;
+}
+
+export interface TelemetryState {
+  isLive: boolean;
+  pingIntervalSec: number;
+  latencyMs: number;
+  lastPingTime: string | null;
+  totalPingsCount: number;
+  liveClicksPerSec: number;
+  liveViewsPerSec: number;
+}
+

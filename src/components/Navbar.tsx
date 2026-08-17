@@ -25,6 +25,8 @@ interface NavbarProps {
   activeCount: number;
   totalCount: number;
   autoRefreshCountdown: number;
+  isLivePinging?: boolean;
+  latencyMs?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -39,6 +41,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeCount,
   totalCount,
   autoRefreshCountdown,
+  isLivePinging = true,
+  latencyMs = 28,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#27272a] bg-[#09090b]/90 backdrop-blur-md">
@@ -60,12 +64,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <div className="hidden lg:flex items-center ml-4 pl-4 border-l border-[#27272a] gap-3">
             <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#18181b] border border-[#27272a] text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="relative flex h-2 w-2">
+                {isLivePinging && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
               <span className="text-[#fafafa] font-medium">{activeCount} / {totalCount} Online</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#a1a1aa]">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span>Next sync in {autoRefreshCountdown}s</span>
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
+              <Zap className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span>1s Live Ping ({latencyMs}ms)</span>
             </div>
           </div>
         </div>

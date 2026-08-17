@@ -51,19 +51,25 @@ export const StatCards: React.FC<StatCardsProps> = ({ stats, loading }) => {
       </div>
 
       {/* 2. Today's Clicks */}
-      <div id="stat-card-today-clicks" className="bg-[#09090b] border border-[#27272a] p-5 rounded-xl flex flex-col justify-between">
+      <div id="stat-card-today-clicks" className="bg-[#09090b] border border-[#27272a] p-5 rounded-xl flex flex-col justify-between relative overflow-hidden">
         <div>
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-[#a1a1aa] uppercase tracking-wider mb-1">Today's Clicks</p>
-            <MousePointerClick className="w-4 h-4 text-[#a1a1aa]" />
+            <p className="text-xs font-medium text-[#a1a1aa] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              Today's Clicks
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping mr-1" />
+                Live
+              </span>
+            </p>
+            <MousePointerClick className="w-4 h-4 text-emerald-400" />
           </div>
-          <h3 className="text-2xl font-bold text-[#fafafa]">
+          <h3 className="text-2xl font-bold text-[#fafafa] font-mono">
             {loading ? '...' : today.totalLinkClicks.toLocaleString()}
           </h3>
         </div>
         <p className="text-xs text-emerald-400 mt-3 flex items-center gap-1 font-medium">
           <TrendingUp className="w-3.5 h-3.5" />
-          <span>{today.totalLinkClicks > 0 ? `+${today.clickGrowthPct || 0}% increase` : '0 bio clicks today'}</span>
+          <span>{today.totalLinkClicks > 0 ? `+${today.clickGrowthPct || 0}% increase` : 'Live bio funnel tracking'}</span>
         </p>
       </div>
 
