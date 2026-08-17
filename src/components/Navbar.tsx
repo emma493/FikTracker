@@ -15,7 +15,7 @@ import { User } from '../types';
 
 interface NavbarProps {
   user: User | null;
-  onLogout: () => void;
+  onLogout?: () => void;
   onOpenAddModal: () => void;
   onOpenImportModal: () => void;
   onOpenSettingsModal: () => void;
@@ -117,23 +117,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Settings & Profile Menu */}
-          <div className="flex items-center ml-2 pl-2 border-l border-[#27272a] gap-1">
+          <div className="flex items-center ml-2 pl-2 border-l border-[#27272a] gap-2">
             <button
               id="open-settings-btn"
               onClick={onOpenSettingsModal}
-              className="p-2 rounded-md text-[#a1a1aa] hover:text-white hover:bg-[#27272a] transition"
+              className="flex items-center gap-1.5 p-2 rounded-md text-[#a1a1aa] hover:text-white hover:bg-[#27272a] transition"
               title="Tracker Settings & Webhooks"
             >
               <Settings className="w-4 h-4" />
-            </button>
-
-            <button
-              id="logout-btn"
-              onClick={onLogout}
-              className="p-2 rounded-md text-[#a1a1aa] hover:text-rose-400 hover:bg-rose-950/20 transition"
-              title={`Logged in as ${user?.email || 'User'} - Click to Log Out`}
-            >
-              <LogOut className="w-4 h-4" />
+              <span className="text-xs hidden sm:inline">Settings</span>
             </button>
           </div>
         </div>

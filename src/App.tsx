@@ -7,13 +7,20 @@ import { AddAccountModal } from './components/AddAccountModal';
 import { AccountDetailsModal } from './components/AccountDetailsModal';
 import { BulkImportModal } from './components/BulkImportModal';
 import { SettingsModal } from './components/SettingsModal';
-import { AuthScreen } from './components/AuthScreen';
 import { firebaseService } from './services/firebaseService';
 import { User, FikFapAccount, DashboardStats } from './types';
 import { CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 
+const DEFAULT_USER: User = {
+  id: 'fikfap_main_workspace',
+  email: 'workspace@fikfap.io',
+  name: 'Primary Workspace',
+  role: 'creator',
+  createdAt: new Date().toISOString(),
+};
+
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>(DEFAULT_USER);
   const [authInitialized, setAuthInitialized] = useState(false);
 
   // Data states
@@ -45,13 +52,10 @@ export default function App() {
   // Listen to Firebase Auth state
   useEffect(() => {
     const unsubscribe = firebaseService.onAuthChange((authenticatedUser) => {
-      setUser(authenticatedUser);
-      setAuthInitialized(true);
-      if (!authenticatedUser) {
-        setAccounts([]);
-        setStats(null);
-        setLoading(false);
+      if (authenticatedUser) {
+        setUser(authenticatedUser);
       }
+      setAuthInitialized(true);
     });
 
     return () => unsubscribe();
@@ -97,24 +101,6 @@ export default function App() {
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
   }, [user]);
-
-  // Handle Login / Logout
-  const handleLoginSuccess = (authenticatedUser: User) => {
-    setUser(authenticatedUser);
-    showToast(`Welcome, ${authenticatedUser.name || authenticatedUser.email}!`);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await firebaseService.logout();
-      setUser(null);
-      setAccounts([]);
-      setStats(null);
-      showToast('Successfully logged out from Firebase.');
-    } catch (e: any) {
-      showToast(e.message || 'Logout failed', 'error');
-    }
-  };
 
   // Sync actions
   const handleSyncSingleAccount = async (id: string) => {
@@ -285,21 +271,6 @@ export default function App() {
     showToast('Exported accounts to CSV!');
   };
 
-  if (!authInitialized) {
-    return (
-      <div className="min-h-screen bg-[#09090b] text-[#fafafa] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-xs text-[#a1a1aa]">
-          <RefreshCw className="w-4 h-4 animate-spin text-white" />
-          <span>Connecting to Firebase...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
-  }
-
   const activeCount = accounts.filter(a => a.status === 'active').length;
 
   return (
@@ -307,7 +278,6 @@ export default function App() {
       {/* Top Navigation */}
       <Navbar
         user={user}
-        onLogout={handleLogout}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}

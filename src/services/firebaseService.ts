@@ -88,7 +88,22 @@ export const firebaseService = {
           callback(this.mapFirebaseUser(fbUser));
         }
       } else {
-        callback(null);
+        // Automatically sign in anonymously in background without interrupting the user
+        try {
+          const userCredential = await signInAnonymously(auth);
+          const newUser = this.mapFirebaseUser(userCredential.user);
+          callback(newUser);
+        } catch (e) {
+          console.warn('Anonymous sign in fallback:', e);
+          // Fallback guest user object so dashboard works immediately
+          callback({
+            id: 'guest_user',
+            email: 'workspace@fikfap.local',
+            name: 'Workspace',
+            role: 'creator',
+            createdAt: new Date().toISOString(),
+          });
+        }
       }
     });
   },
