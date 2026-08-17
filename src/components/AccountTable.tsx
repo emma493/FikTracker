@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import {
   Search,
-  Filter,
   RefreshCw,
   Trash2,
   ExternalLink,
   AlertTriangle,
-  CheckCircle2,
   Clock,
   Video,
   MousePointerClick,
   Eye,
-  MoreVertical,
+  Users,
   Plus,
-  Flame,
   ArrowUpDown,
-  Shield,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 import { FikFapAccount, AccountStatus } from '../types';
+import { formatMetricNumber } from '../utils/fikfapParser';
 
 interface AccountTableProps {
   accounts: FikFapAccount[];
@@ -43,7 +41,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | AccountStatus>('all');
-  const [sortBy, setSortBy] = useState<'clicks' | 'videos' | 'todayClicks' | 'lastUpdated'>('clicks');
+  const [sortBy, setSortBy] = useState<'videos' | 'clicks' | 'followers' | 'views' | 'lastUpdated'>('clicks');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Format relative time
@@ -60,31 +58,42 @@ export const AccountTable: React.FC<AccountTableProps> = ({
     return `${diffDays}d ago`;
   };
 
-  // Filter accounts
+  // Filter accounts by search query and status tab
   const filteredAccounts = accounts.filter(acc => {
+    const q = searchTerm.toLowerCase().trim();
     const matchesSearch =
-      acc.fikfapEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      acc.fikfapUsername.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (acc.label && acc.label.toLowerCase().includes(searchTerm.toLowerCase()));
+      !q ||
+      acc.fikfapEmail.toLowerCase().includes(q) ||
+      acc.fikfapUsername.toLowerCase().includes(q) ||
+      (acc.label && acc.label.toLowerCase().includes(q)) ||
+      (acc.targetBioLink && acc.targetBioLink.toLowerCase().includes(q)) ||
+      acc.status.toLowerCase().includes(q) ||
+      String(acc.totalVideos).includes(q) ||
+      String(acc.totalLinkClicks).includes(q) ||
+      String(acc.totalFollowers).includes(q) ||
+      String(acc.totalViews).includes(q);
 
     const matchesStatus = statusFilter === 'all' || acc.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  // Sort accounts
+  // Sort accounts by selected metric
   const sortedAccounts = [...filteredAccounts].sort((a, b) => {
     let valA = 0;
     let valB = 0;
 
-    if (sortBy === 'clicks') {
-      valA = a.totalLinkClicks;
-      valB = b.totalLinkClicks;
-    } else if (sortBy === 'videos') {
+    if (sortBy === 'videos') {
       valA = a.totalVideos;
       valB = b.totalVideos;
-    } else if (sortBy === 'todayClicks') {
-      valA = a.todayLinkClicks;
-      valB = b.todayLinkClicks;
+    } else if (sortBy === 'clicks') {
+      valA = a.totalLinkClicks;
+      valB = b.totalLinkClicks;
+    } else if (sortBy === 'followers') {
+      valA = a.totalFollowers;
+      valB = b.totalFollowers;
+    } else if (sortBy === 'views') {
+      valA = a.totalViews;
+      valB = b.totalViews;
     } else if (sortBy === 'lastUpdated') {
       valA = new Date(a.lastUpdated || 0).getTime();
       valB = new Date(b.lastUpdated || 0).getTime();
@@ -93,7 +102,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({
     return sortOrder === 'desc' ? valB - valA : valA - valB;
   });
 
-  const toggleSort = (field: 'clicks' | 'videos' | 'todayClicks' | 'lastUpdated') => {
+  const toggleSort = (field: 'videos' | 'clicks' | 'followers' | 'views' | 'lastUpdated') => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
     } else {
@@ -127,7 +136,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({
         return (
           <span
             className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20 cursor-help"
-            title={acc.errorMessage || 'Authentication or scraping error'}
+            title={acc.errorMessage || 'Authentication or scraping error on https://fikfap.com'}
           >
             <AlertTriangle className="w-3 h-3" />
             <span>Error</span>
@@ -145,29 +154,29 @@ export const AccountTable: React.FC<AccountTableProps> = ({
   };
 
   return (
-    <div className="rounded-xl bg-[#09090b] border border-[#27272a] overflow-hidden">
+    <div className="rounded-xl bg-[#09090b] border border-[#27272a] overflow-hidden shadow-sm">
       {/* Controls & Filter Bar */}
       <div className="p-4 sm:p-5 border-b border-[#27272a] bg-[#111113] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-[#fafafa]">Managed FikFap Accounts</h3>
+            <h3 className="text-sm font-semibold text-[#fafafa]">FikFap Accounts</h3>
             <span className="text-xs px-2 py-0.5 rounded-md bg-[#27272a] text-[#a1a1aa] font-medium border border-[#3f3f46]">
-              {accounts.length} total
+              {filteredAccounts.length} of {accounts.length}
             </span>
           </div>
           <p className="text-xs text-[#a1a1aa] mt-0.5">
-            Monitor real-time video counts, bio link click attribution, and sync health
+            Displaying Total Videos, Total Link Clicks, Total Followers, Total Views, and Status
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search Box */}
-          <div className="relative min-w-[220px]">
+          <div className="relative min-w-[240px]">
             <Search className="w-4 h-4 text-[#71717a] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               id="account-search-input"
               type="text"
-              placeholder="Search accounts..."
+              placeholder="Search by username, email, metric..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#09090b] border border-[#27272a] rounded-lg text-[#fafafa] placeholder-[#71717a] focus:outline-none focus:border-[#52525b]"
@@ -214,7 +223,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({
             </button>
           </div>
 
-          {/* Add Account CTA & Clear All */}
+          {/* Actions: Clear All & Add Account */}
           <div className="flex items-center gap-2">
             {onClearAll && accounts.length > 0 && (
               <button
@@ -224,14 +233,14 @@ export const AccountTable: React.FC<AccountTableProps> = ({
                 title="Delete all accounts from database"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear All</span>
+                <span>Clear</span>
               </button>
             )}
 
             <button
               id="table-add-account-btn"
               onClick={onOpenAddModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-black bg-white hover:bg-zinc-200 transition shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg text-black bg-white hover:bg-zinc-200 transition shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Account</span>
@@ -246,7 +255,6 @@ export const AccountTable: React.FC<AccountTableProps> = ({
           <thead>
             <tr className="border-b border-[#27272a] bg-[#09090b] text-[11px] font-semibold text-[#a1a1aa] uppercase tracking-wider">
               <th className="py-3 px-4">Account / Creator</th>
-              <th className="py-3 px-4">Status</th>
               <th
                 className="py-3 px-4 cursor-pointer hover:text-[#fafafa] transition"
                 onClick={() => toggleSort('videos')}
@@ -267,16 +275,25 @@ export const AccountTable: React.FC<AccountTableProps> = ({
               </th>
               <th
                 className="py-3 px-4 cursor-pointer hover:text-[#fafafa] transition"
-                onClick={() => toggleSort('todayClicks')}
+                onClick={() => toggleSort('followers')}
               >
                 <div className="flex items-center gap-1">
-                  <span>Today's Activity</span>
+                  <span>Total Followers</span>
                   <ArrowUpDown className="w-3 h-3 text-[#71717a]" />
                 </div>
               </th>
-              <th className="py-3 px-4">Target Bio Link</th>
               <th
                 className="py-3 px-4 cursor-pointer hover:text-[#fafafa] transition"
+                onClick={() => toggleSort('views')}
+              >
+                <div className="flex items-center gap-1">
+                  <span>Total Views</span>
+                  <ArrowUpDown className="w-3 h-3 text-[#71717a]" />
+                </div>
+              </th>
+              <th className="py-3 px-4">Status</th>
+              <th
+                className="py-3 px-4 cursor-pointer hover:text-[#fafafa] transition hidden md:table-cell"
                 onClick={() => toggleSort('lastUpdated')}
               >
                 <div className="flex items-center gap-1">
@@ -291,7 +308,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({
             {loading && accounts.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-12 text-center text-[#a1a1aa]">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-400" />
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-white" />
                   <span>Loading tracked accounts...</span>
                 </td>
               </tr>
@@ -301,116 +318,128 @@ export const AccountTable: React.FC<AccountTableProps> = ({
                   <Layers className="w-8 h-8 mx-auto mb-2 text-[#71717a]" />
                   <p className="font-medium text-[#fafafa]">No FikFap accounts found</p>
                   <p className="text-xs text-[#71717a] mt-1">
-                    {searchTerm ? 'Try adjusting your search query or status filter.' : 'Click "Add Account" above to connect your first FikFap profile.'}
+                    {searchTerm
+                      ? `No accounts matching "${searchTerm}". Try another search term.`
+                      : 'Click "Add Account" above to connect your first FikFap profile.'}
                   </p>
                 </td>
               </tr>
             ) : (
               sortedAccounts.map(acc => {
                 const isSyncing = syncingId === acc.id || acc.status === 'syncing';
+                const profilePageUrl = `https://fikfap.com/user/${acc.fikfapUsername}`;
+
                 return (
                   <tr
                     key={acc.id}
                     id={`account-row-${acc.id}`}
                     className="hover:bg-[#111113] transition group"
                   >
-                    {/* Account Identity */}
+                    {/* 1. Account / Creator */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center justify-center font-semibold text-[#fafafa]">
                           {acc.fikfapUsername.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <button
-                            onClick={() => onOpenDetails(acc)}
-                            className="font-medium text-[#fafafa] hover:underline transition text-left flex items-center gap-1.5"
-                          >
-                            <span>@{acc.fikfapUsername}</span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => onOpenDetails(acc)}
+                              className="font-medium text-[#fafafa] hover:underline transition text-left"
+                            >
+                              @{acc.fikfapUsername}
+                            </button>
+                            <a
+                              href={profilePageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-zinc-500 hover:text-zinc-300 transition"
+                              title={`Open ${profilePageUrl}`}
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
                             {acc.label && (
                               <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-[#18181b] text-[#a1a1aa] border border-[#27272a]">
                                 {acc.label}
                               </span>
                             )}
-                          </button>
+                          </div>
                           <p className="text-[11px] text-[#71717a] font-mono mt-0.5">{acc.fikfapEmail}</p>
                         </div>
                       </div>
                     </td>
 
-                    {/* Status */}
+                    {/* 2. Total Videos (Clips) */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <Video className="w-3.5 h-3.5 text-indigo-400" />
+                        <span className="font-semibold text-[#fafafa] text-sm">
+                          {acc.totalVideos.toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#71717a]">Clips</span>
+                    </td>
+
+                    {/* 3. Total Link Clicks */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <MousePointerClick className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="font-semibold text-[#fafafa] text-sm">
+                          {acc.totalLinkClicks.toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#71717a]">
+                        {acc.totalVideos > 0
+                          ? `~${Math.round(acc.totalLinkClicks / acc.totalVideos)} / clip`
+                          : 'Profile links'}
+                      </span>
+                    </td>
+
+                    {/* 4. Total Followers */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="font-semibold text-[#fafafa] text-sm">
+                          {acc.totalFollowers.toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#71717a]">Followers</span>
+                    </td>
+
+                    {/* 5. Total Views */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-sky-400" />
+                        <span className="font-semibold text-[#fafafa] text-sm">
+                          {formatMetricNumber(acc.totalViews)}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#71717a]">
+                        {acc.totalViews.toLocaleString()} views
+                      </span>
+                    </td>
+
+                    {/* 6. Status */}
                     <td className="py-3.5 px-4">
                       <div className="space-y-1">
                         {renderStatusBadge(acc)}
                         {acc.status === 'error' && acc.errorMessage && (
-                          <p className="text-[10px] text-rose-400 max-w-[180px] truncate" title={acc.errorMessage}>
+                          <p className="text-[10px] text-rose-400 max-w-[160px] truncate" title={acc.errorMessage}>
                             {acc.errorMessage}
                           </p>
                         )}
                       </div>
                     </td>
 
-                    {/* Total Videos */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <Video className="w-3.5 h-3.5 text-[#a1a1aa]" />
-                        <span className="font-semibold text-[#fafafa]">{acc.totalVideos.toLocaleString()}</span>
-                      </div>
-                      <span className="text-[10px] text-[#71717a]">Total clips</span>
-                    </td>
-
-                    {/* Total Link Clicks */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <MousePointerClick className="w-3.5 h-3.5 text-[#a1a1aa]" />
-                        <span className="font-semibold text-[#fafafa]">{acc.totalLinkClicks.toLocaleString()}</span>
-                      </div>
-                      <span className="text-[10px] text-[#71717a]">
-                        {acc.totalVideos > 0 ? `~${Math.round(acc.totalLinkClicks / acc.totalVideos)} / vid` : 'No vids'}
-                      </span>
-                    </td>
-
-                    {/* Today's Performance */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium text-[11px]">
-                          +{acc.todayVideos} vids
-                        </div>
-                        <div className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium text-[11px]">
-                          +{acc.todayLinkClicks} clicks
-                        </div>
-                      </div>
-                      <div className="text-[10px] text-[#71717a] mt-0.5">
-                        {acc.todayViews.toLocaleString()} views today
-                      </div>
-                    </td>
-
-                    {/* Target Bio Link */}
-                    <td className="py-3.5 px-4">
-                      {acc.targetBioLink ? (
-                        <a
-                          href={acc.targetBioLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[#a1a1aa] hover:text-[#fafafa] font-mono text-[11px] max-w-[150px] truncate transition"
-                          title={acc.targetBioLink}
-                        >
-                          <span className="truncate">{acc.targetBioLink.replace(/^https?:\/\//, '')}</span>
-                          <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                        </a>
-                      ) : (
-                        <span className="text-[#71717a] text-[11px] italic">Not configured</span>
-                      )}
-                    </td>
-
-                    {/* Last Sync */}
-                    <td className="py-3.5 px-4 text-[#a1a1aa] font-mono text-[11px]">
+                    {/* 7. Last Sync */}
+                    <td className="py-3.5 px-4 text-[#a1a1aa] font-mono text-[11px] hidden md:table-cell">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-[#71717a]" />
                         <span>{formatTimeAgo(acc.lastUpdated)}</span>
                       </div>
                     </td>
 
-                    {/* Actions */}
+                    {/* 8. Actions */}
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         {/* Sync Single Account */}
@@ -419,9 +448,9 @@ export const AccountTable: React.FC<AccountTableProps> = ({
                           onClick={() => onSyncAccount(acc.id)}
                           disabled={isSyncing}
                           className="p-1.5 rounded-md text-[#a1a1aa] hover:text-[#fafafa] hover:bg-[#27272a] border border-[#27272a] transition disabled:opacity-50"
-                          title="Sync fresh data from FikFap"
+                          title="Sync fresh telemetry from FikFap"
                         >
-                          <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-indigo-400' : ''}`} />
+                          <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-white' : ''}`} />
                         </button>
 
                         {/* View Details / Logs */}
@@ -438,7 +467,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({
                           id={`delete-account-btn-${acc.id}`}
                           onClick={() => onDeleteAccount(acc.id, acc.fikfapUsername || acc.fikfapEmail)}
                           className="p-1.5 rounded-md text-[#71717a] hover:text-rose-400 hover:bg-rose-950/20 border border-[#27272a] transition"
-                          title="Delete account from tracker"
+                          title="Delete account"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

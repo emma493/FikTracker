@@ -121,6 +121,32 @@ async function startServer() {
   });
 
   // ==========================================
+  // FIKFAP LIVE SCRAPER & PARSER API
+  // ==========================================
+
+  // POST /api/fikfap/scrape - Fetch and parse live data from https://fikfap.com/login & profile/stats
+  app.post('/api/fikfap/scrape', async (req, res) => {
+    const { email, password, username, proxy, rawHtml } = req.body;
+    if (!email && !username && !rawHtml) {
+      return res.status(400).json({ error: 'Email, username, or raw HTML is required.' });
+    }
+    const { scrapeFikFapLive } = await import('./server/scraper.js');
+    const result = await scrapeFikFapLive(email || username, password, username, proxy, rawHtml);
+    return res.json(result);
+  });
+
+  // POST /api/fikfap/parse - Parse pasted HTML directly
+  app.post('/api/fikfap/parse', async (req, res) => {
+    const { html } = req.body;
+    if (!html) {
+      return res.status(400).json({ error: 'HTML string is required.' });
+    }
+    const { parseFikFapHtml } = await import('./src/utils/fikfapParser.js');
+    const parsed = parseFikFapHtml(html);
+    return res.json({ valid: true, ...parsed });
+  });
+
+  // ==========================================
   // ACCOUNTS MANAGEMENT API
   // ==========================================
 
