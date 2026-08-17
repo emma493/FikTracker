@@ -62,7 +62,15 @@ class ApiService {
       throw new Error('Session expired. Please log in again.');
     }
 
-    const data = await response.json().catch(() => ({}));
+    const text = await response.text();
+    let data: any = {};
+    try {
+      if (text && (text.trim().startsWith('{') || text.trim().startsWith('['))) {
+        data = JSON.parse(text);
+      }
+    } catch {
+      data = {};
+    }
 
     if (!response.ok) {
       throw new Error(data.error || `Request failed with status ${response.status}`);

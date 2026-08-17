@@ -14,6 +14,7 @@ import {
   ArrowUpDown,
   Layers,
   Sparkles,
+  Edit3,
 } from 'lucide-react';
 import { FikFapAccount, AccountStatus } from '../types';
 import { formatMetricNumber } from '../utils/fikfapParser';
@@ -23,6 +24,7 @@ interface AccountTableProps {
   loading: boolean;
   onOpenAddModal: () => void;
   onOpenDetails: (account: FikFapAccount) => void;
+  onEditAccount?: (account: FikFapAccount) => void;
   onDeleteAccount: (id: string, name: string) => void;
   onSyncAccount: (id: string) => void;
   onClearAll?: () => void;
@@ -34,6 +36,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({
   loading,
   onOpenAddModal,
   onOpenDetails,
+  onEditAccount,
   onDeleteAccount,
   onSyncAccount,
   onClearAll,
@@ -461,6 +464,18 @@ export const AccountTable: React.FC<AccountTableProps> = ({
                         >
                           Details
                         </button>
+
+                        {/* Edit Account */}
+                        {onEditAccount && (
+                          <button
+                            id={`edit-account-btn-${acc.id}`}
+                            onClick={() => onEditAccount(acc)}
+                            className="p-1.5 rounded-md text-[#a1a1aa] hover:text-white hover:bg-[#27272a] border border-[#27272a] transition"
+                            title="Edit account details"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-zinc-300" />
+                          </button>
+                        )}
 
                         {/* Delete Account */}
                         <button

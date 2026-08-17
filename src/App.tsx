@@ -5,6 +5,7 @@ import { AnalyticsCharts } from './components/AnalyticsCharts';
 import { AccountTable } from './components/AccountTable';
 import { AddAccountModal } from './components/AddAccountModal';
 import { AccountDetailsModal } from './components/AccountDetailsModal';
+import { EditAccountModal } from './components/EditAccountModal';
 import { BulkImportModal } from './components/BulkImportModal';
 import { SettingsModal } from './components/SettingsModal';
 import { firebaseService } from './services/firebaseService';
@@ -36,6 +37,8 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<FikFapAccount | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<FikFapAccount | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Toast notifications
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
@@ -287,6 +290,11 @@ export default function App() {
     setIsDetailsModalOpen(true);
   };
 
+  const handleOpenEdit = (acc: FikFapAccount) => {
+    setEditingAccount(acc);
+    setIsEditModalOpen(true);
+  };
+
   // CSV Export
   const handleExportCsv = () => {
     if (accounts.length === 0) {
@@ -392,6 +400,7 @@ export default function App() {
           loading={loading}
           onOpenAddModal={() => setIsAddModalOpen(true)}
           onOpenDetails={handleOpenDetails}
+          onEditAccount={handleOpenEdit}
           onDeleteAccount={handleDeleteAccount}
           onSyncAccount={handleSyncSingleAccount}
           onClearAll={handleClearAllAccounts}
@@ -405,6 +414,14 @@ export default function App() {
         userId={user.id}
         onClose={() => setIsAddModalOpen(false)}
         onAccountAdded={handleAccountAdded}
+      />
+
+      <EditAccountModal
+        account={editingAccount}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdateAccount={handleAccountUpdated}
+        onDeleteAccount={handleDeleteAccount}
       />
 
       <AccountDetailsModal
